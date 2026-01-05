@@ -26,7 +26,7 @@ pub fn lex(
     _ -> {
       case string.first(data.0) {
         Ok(c) -> {
-          let mask = #(utils.is_digit(c), utils.is_alpha(c))
+          let mask = #(utils.is_digit(c), utils.is_identifier_valid(c))
           case mask {
             #(True, _) -> {
               let #(num_str, rest) = consume_while(data.0, utils.is_digit)
@@ -45,7 +45,18 @@ pub fn lex(
                 data.1,
               ))
             }
-            #(_, True) -> todo
+            #(_, True) -> {
+              let #(ident, rest) =
+                consume_while(data.0, utils.is_identifier_valid)
+              lex(add_token(
+                rest,
+                data.2,
+                token.Identifier,
+                ident,
+                token.None,
+                data.1,
+              ))
+            }
             _ -> todo
           }
         }

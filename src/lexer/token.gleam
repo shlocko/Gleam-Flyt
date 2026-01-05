@@ -18,6 +18,7 @@ pub type TokenType {
   Int
   Float
   String
+  Identifier
 }
 
 pub type Token {
