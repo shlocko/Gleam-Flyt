@@ -5,7 +5,9 @@ import gleam/string
 import lexer/token.{type Token, Token}
 import lexer/utils
 
-pub fn lex(data: #(String, Int, List(Token))) -> #(String, Int, List(Token)) {
+pub fn lex(
+  data: #(String, Int, List(Token)),
+) -> Result(#(String, Int, List(Token)), String) {
   case data.0 {
     "\n" <> rest -> lex(#(rest, { data.1 } + 1, data.2))
     "(" <> rest ->
@@ -24,32 +26,30 @@ pub fn lex(data: #(String, Int, List(Token))) -> #(String, Int, List(Token)) {
     _ -> {
       case string.first(data.0) {
         Ok(c) -> {
-          case utils.is_digit(c) {
-            True -> {
+          let mask = #(utils.is_digit(c), utils.is_alpha(c))
+          case mask {
+            #(True, _) -> {
               let #(num_str, rest) = consume_while(data.0, utils.is_digit)
-              case int.parse(num_str) {
-                Ok(num) -> {
-                  lex(add_token(
-                    rest,
-                    data.2,
-                    token.Int,
-                    num_str,
-                    token.IntLiteral(num),
-                    data.1,
-                  ))
-                }
-                _ -> panic
-              }
+              use num <- result.try(
+                int.parse(num_str)
+                |> result.map_error(fn(_) {
+                  "Failed to parse numeric literal: " <> num_str
+                }),
+              )
+              lex(add_token(
+                rest,
+                data.2,
+                token.Int,
+                num_str,
+                token.IntLiteral(num),
+                data.1,
+              ))
             }
-            False -> {
-              case utils.is_alpha(c) {
-                True -> todo
-                False -> todo
-              }
-            }
+            #(_, True) -> todo
+            _ -> todo
           }
         }
-        _ -> #("", data.1, data.2)
+        _ -> Ok(#("", data.1, data.2))
       }
     }
   }
@@ -77,7 +77,7 @@ fn consume_while_helper(
         }
         False -> {
           let taken = string.join(list.reverse(acc), "")
-          echo rest
+          // echo rest
           let unused = string.join([c, ..rest], "")
           #(taken, unused)
         }
