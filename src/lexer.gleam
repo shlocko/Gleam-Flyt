@@ -1,14 +1,89 @@
+import gleam/int
+import gleam/list
+import gleam/result
+import gleam/string
 import lexer/token.{type Token, Token}
+import lexer/utils
 
 pub fn lex(data: #(String, Int, List(Token))) -> #(String, Int, List(Token)) {
   case data.0 {
     "\n" <> rest -> lex(#(rest, { data.1 } + 1, data.2))
-    "(" <> rest -> lex(add_token(rest, data.2, token.LeftParen, "(", data.1))
-    ")" <> rest -> lex(add_token(rest, data.2, token.RightParen, ")", data.1))
-    "+" <> rest -> lex(add_token(rest, data.2, token.Plus, "+", data.1))
+    "(" <> rest ->
+      lex(add_token(rest, data.2, token.LeftParen, "(", token.None, data.1))
+    ")" <> rest ->
+      lex(add_token(rest, data.2, token.RightParen, ")", token.None, data.1))
+    "+" <> rest ->
+      lex(add_token(rest, data.2, token.Plus, "+", token.None, data.1))
+    "-" <> rest ->
+      lex(add_token(rest, data.2, token.Minus, "-", token.None, data.1))
+    "*" <> rest ->
+      lex(add_token(rest, data.2, token.Star, "*", token.None, data.1))
+    "/" <> rest ->
+      lex(add_token(rest, data.2, token.Slash, "/", token.None, data.1))
+
     _ -> {
-      data
+      case string.first(data.0) {
+        Ok(c) -> {
+          case utils.is_digit(c) {
+            True -> {
+              let #(num_str, rest) = consume_while(data.0, utils.is_digit)
+              case int.parse(num_str) {
+                Ok(num) -> {
+                  lex(add_token(
+                    rest,
+                    data.2,
+                    token.Int,
+                    num_str,
+                    token.IntLiteral(num),
+                    data.1,
+                  ))
+                }
+                _ -> panic
+              }
+            }
+            False -> {
+              case utils.is_alpha(c) {
+                True -> todo
+                False -> todo
+              }
+            }
+          }
+        }
+        _ -> #("", data.1, data.2)
+      }
     }
+  }
+}
+
+fn consume_while(
+  input: String,
+  predicate: fn(String) -> Bool,
+) -> #(String, String) {
+  let #(acc, rest) =
+    consume_while_helper(string.to_graphemes(input), [], predicate)
+  #(acc, rest)
+}
+
+fn consume_while_helper(
+  input: List(String),
+  acc: List(String),
+  predicate: fn(String) -> Bool,
+) -> #(String, String) {
+  case input {
+    [c, ..rest] -> {
+      case predicate(c) {
+        True -> {
+          consume_while_helper(rest, [c, ..acc], predicate)
+        }
+        False -> {
+          let taken = string.join(list.reverse(acc), "")
+          echo rest
+          let unused = string.join([c, ..rest], "")
+          #(taken, unused)
+        }
+      }
+    }
+    [] -> #(string.join(list.reverse(acc), ""), "")
   }
 }
 
@@ -17,12 +92,13 @@ fn add_token(
   tokens: List(Token),
   kind: token.TokenType,
   lexeme: String,
+  literal: token.TokenLiteral,
   line_number: Int,
 ) -> #(String, Int, List(Token)) {
   let tok =
     Token(
       kind: kind,
-      literal: token.None,
+      literal: literal,
       lexeme: lexeme,
       line_number: line_number,
     )

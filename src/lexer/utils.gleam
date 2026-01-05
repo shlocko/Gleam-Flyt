@@ -30,7 +30,7 @@ pub fn is_digit(c: String) -> Bool {
   }
 }
 
-pub fn in_alpha(c: String) -> Bool {
+pub fn is_alpha(c: String) -> Bool {
   case string.to_utf_codepoints(c) {
     [codepoint] -> {
       let code = string.utf_codepoint_to_int(codepoint)
