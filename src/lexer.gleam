@@ -6,9 +6,13 @@ import lexer/token.{type Token, Token}
 import lexer/utils
 
 pub fn lex(
+  // ata: (source, linenumber, token accumulator)
   data: #(String, Int, List(Token)),
 ) -> Result(#(String, Int, List(Token)), String) {
   case data.0 {
+    // Keywords
+    // Two Character Tokens
+    // One Character Tokens
     "\n" <> rest -> lex(#(rest, { data.1 } + 1, data.2))
     "(" <> rest ->
       lex(add_token(rest, data.2, token.LeftParen, "(", token.None, data.1))
