@@ -13,6 +13,7 @@ pub type TokenType {
   Slash
   LeftParen
   RightParen
+  Caret
 
   // 
   Int

@@ -38,7 +38,7 @@ fn parse_term_helper(left: expr.Expression, tokens: List(Token)) -> ParserResult
 }
 
 fn parse_factor(tokens: List(Token)) -> ParserResult {
-  use #(left, rest) <- result.try(parse_primary(tokens))
+  use #(left, rest) <- result.try(parse_exponential(tokens))
   parse_factor_helper(left, rest)
 }
 
@@ -48,6 +48,27 @@ fn parse_factor_helper(
 ) -> ParserResult {
   case tokens {
     [op, ..rest] if op.kind == token.Star || op.kind == token.Slash -> {
+      use #(right, rest2) <- result.try(parse_exponential(rest))
+
+      let expression =
+        expr.BinaryOperator(op: op.kind, left: left, right: right)
+      parse_factor_helper(expression, rest2)
+    }
+    _ -> Ok(#(left, tokens))
+  }
+}
+
+fn parse_exponential(tokens: List(Token)) -> ParserResult {
+  use #(left, rest) <- result.try(parse_primary(tokens))
+  parse_exponential_helper(left, rest)
+}
+
+fn parse_exponential_helper(
+  left: expr.Expression,
+  tokens: List(Token),
+) -> ParserResult {
+  case tokens {
+    [op, ..rest] if op.kind == token.Caret -> {
       use #(right, rest2) <- result.try(parse_primary(rest))
 
       let expression =

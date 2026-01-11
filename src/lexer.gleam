@@ -13,6 +13,9 @@ pub fn lex(
     // Keywords
     // Two Character Tokens
     // One Character Tokens
+    " " <> rest -> {
+      lex(#(rest, data.1, data.2))
+    }
     "\n" <> rest -> lex(#(rest, { data.1 } + 1, data.2))
     "(" <> rest ->
       lex(add_token(rest, data.2, token.LeftParen, "(", token.None, data.1))
@@ -26,6 +29,8 @@ pub fn lex(
       lex(add_token(rest, data.2, token.Star, "*", token.None, data.1))
     "/" <> rest ->
       lex(add_token(rest, data.2, token.Slash, "/", token.None, data.1))
+    "^" <> rest ->
+      lex(add_token(rest, data.2, token.Caret, "^", token.None, data.1))
 
     _ -> {
       case string.first(data.0) {
