@@ -10,7 +10,7 @@ import parser
 pub fn main() -> Result(Nil, String) {
   echo "_ => "
   echo utils.check_utf("_")
-  case lexer.lex(#("1+2*2-3", 0, [])) {
+  case lexer.lex(#("1+2*(2-3)", 0, [])) {
     Ok(#(str, _, tokens)) -> {
       let tokens = list.reverse(tokens)
       echo str

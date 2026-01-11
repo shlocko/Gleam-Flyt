@@ -12,6 +12,10 @@ pub type ParserResult =
   Result(ParserState, String)
 
 pub fn parse(tokens: List(Token)) -> ParserResult {
+  parse_expression(tokens)
+}
+
+fn parse_expression(tokens: List(Token)) -> ParserResult {
   parse_term(tokens)
 }
 
@@ -60,6 +64,20 @@ pub fn parse_primary(tokens: List(Token)) -> ParserResult {
       case tok.kind, tok.literal {
         token.Int, token.IntLiteral(num) -> {
           Ok(#(expr.Int(num), rest))
+        }
+        token.LeftParen, _ -> {
+          use #(expression, rest) <- result.try(parse_expression(rest))
+          case rest {
+            [tok, ..rest] -> {
+              case tok.kind {
+                token.RightParen -> {
+                  Ok(#(expr.Group(expression), rest))
+                }
+                _ -> Error("Expected right paren.")
+              }
+            }
+            _ -> Error("Expected right paren, reached end of tokens.")
+          }
         }
         _, _ -> todo
       }
