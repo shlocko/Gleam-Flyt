@@ -48,7 +48,7 @@ pub fn is_identifier_valid(c: String) -> Bool {
   case string.to_utf_codepoints(c) {
     [codepoint] -> {
       let code = string.utf_codepoint_to_int(codepoint)
-      // digi || alpha || _
+      // digit || alpha || _
       is_digit(c) || is_alpha(c) || code == 95
     }
     _ -> False
