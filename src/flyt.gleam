@@ -6,6 +6,7 @@ import gleam/string
 import lexer
 import lexer/utils
 import parser
+import type_checker
 
 pub fn main() -> Result(Nil, String) {
   echo "_ => "
@@ -15,7 +16,8 @@ pub fn main() -> Result(Nil, String) {
       let tokens = list.reverse(tokens)
       echo str
       echo tokens
-      echo parser.parse(tokens)
+      use #(expr, toks) <- result.try(parser.parse(tokens))
+      echo type_checker.type_expression(expr)
       Ok(Nil)
     }
     Error(str) -> {
