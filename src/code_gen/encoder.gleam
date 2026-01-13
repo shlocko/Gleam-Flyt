@@ -1,7 +1,7 @@
 import code_gen/types as gen_types
 import gleam/json.{type Json}
 
-pub fn encode_jefvalue(value: gen_types.JEFValue) -> Json {
+fn encode_jefvalue(value: gen_types.JEFValue) -> Json {
   json.object([
     case value {
       gen_types.Int(num) -> #("Int", json.int(num))
@@ -12,7 +12,7 @@ pub fn encode_jefvalue(value: gen_types.JEFValue) -> Json {
   ])
 }
 
-pub fn encode_instruction(instruction: gen_types.Instruction) -> Json {
+fn encode_instruction(instruction: gen_types.Instruction) -> Json {
   let instruction_json_list: List(Json) = [
     json.string(instruction.opcode),
     json.array(instruction.args, fn(x) { encode_jefvalue(x) }),
@@ -20,7 +20,7 @@ pub fn encode_instruction(instruction: gen_types.Instruction) -> Json {
   json.array(instruction_json_list, fn(x) { x })
 }
 
-pub fn encode_function_meta_data(meta_data: gen_types.FunctionMetaData) -> Json {
+fn encode_function_meta_data(meta_data: gen_types.FunctionMetaData) -> Json {
   json.object([
     #("address", json.int(meta_data.address)),
     #("arity", json.int(meta_data.arity)),
