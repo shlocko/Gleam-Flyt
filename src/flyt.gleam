@@ -1,8 +1,6 @@
-import gleam/int
 import gleam/io
 import gleam/list
 import gleam/result
-import gleam/string
 import lexer
 import lexer/utils
 import parser
@@ -16,8 +14,8 @@ pub fn main() -> Result(Nil, String) {
       let tokens = list.reverse(tokens)
       echo str
       echo tokens
-      use #(expr, toks) <- result.try(parser.parse(tokens))
-      echo type_checker.type_expression(expr)
+      use #(expr, _leftover_tokens) <- result.try(parser.parse(tokens))
+      let _ = echo type_checker.type_expression(expr)
       Ok(Nil)
     }
     Error(str) -> {

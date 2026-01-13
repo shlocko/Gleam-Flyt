@@ -7,7 +7,7 @@ pub fn type_expression(
   expression: expr.Expression,
 ) -> Result(expr.Expression, String) {
   case expression.kind, expression.value_type {
-    _, Some(kind) -> Ok(expression)
+    _, Some(_) -> Ok(expression)
     expr.Int(_), _ -> {
       Ok(expr.Expression(..expression, value_type: Some(types.Int)))
     }
@@ -43,6 +43,6 @@ pub fn type_expression(
           Error("Mismatched types in left and right of binary expression.")
       }
     }
-    expr.Identifier(name), _ -> todo
+    expr.Identifier(_name), _ -> todo
   }
 }

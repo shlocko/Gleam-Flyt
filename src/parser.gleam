@@ -1,9 +1,7 @@
-import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
-import lexer/token.{type Token, type TokenType}
+import lexer/token.{type Token}
 import parser/expression as expr
-import parser/utils
 import type_checker/types
 
 pub type ParserState =

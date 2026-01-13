@@ -1,5 +1,5 @@
-import gleam/option.{type Option, None, Some}
-import lexer/token.{type TokenType, Token}
+import gleam/option.{type Option}
+import lexer/token.{type TokenType}
 import type_checker/types
 
 pub type Expression {
