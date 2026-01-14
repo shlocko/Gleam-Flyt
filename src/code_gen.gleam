@@ -1,11 +1,23 @@
+import code_gen/encoder
 import code_gen/types.{
   type FunctionMetaData, type Instruction, type JEFValue, type Program,
 } as gen_types
 import code_gen/utils
+import gleam/json
 import gleam/list
 import gleam/result
 import lexer/token
 import parser/expression.{type Expression} as expr
+
+pub fn compile_program(expression: Expression) -> Result(json.Json, String) {
+  use #(instructions, consts) <- result.try(
+    generate_expression(expression, [], []),
+  )
+  let instructions =
+    [gen_types.Instruction("Print", []), ..instructions] |> list.reverse
+  let consts = consts |> list.reverse
+  Ok(encoder.encode_program(consts, [], instructions))
+}
 
 pub fn generate_expression(
   expression: Expression,
@@ -57,7 +69,15 @@ pub fn generate_expression(
     }
     expr.Int(num) -> {
       let #(idx, consts) = utils.find_or_push(gen_types.Int(num), consts)
-      Ok(#([gen_types.Instruction("PushConst", [gen_types.Int(idx)])], consts))
+      echo idx
+      echo consts
+      Ok(#(
+        [
+          gen_types.Instruction("PushConst", [gen_types.Int(idx)]),
+          ..instructions
+        ],
+        consts,
+      ))
     }
     expr.Float(num) -> {
       let #(idx, consts) = utils.find_or_push(gen_types.Float(num), consts)
