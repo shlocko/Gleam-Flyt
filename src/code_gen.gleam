@@ -15,6 +15,7 @@ pub fn compile_program(expression: Expression) -> Result(json.Json, String) {
   )
   let instructions =
     [gen_types.Instruction("Print", []), ..instructions] |> list.reverse
+  let instructions = [gen_types.Instruction("Main", []), ..instructions]
   let consts = consts |> list.reverse
   Ok(encoder.encode_program(consts, [], instructions))
 }
@@ -81,7 +82,13 @@ pub fn generate_expression(
     }
     expr.Float(num) -> {
       let #(idx, consts) = utils.find_or_push(gen_types.Float(num), consts)
-      Ok(#([gen_types.Instruction("PushConst", [gen_types.Int(idx)])], consts))
+      Ok(#(
+        [
+          gen_types.Instruction("PushConst", [gen_types.Int(idx)]),
+          ..instructions
+        ],
+        consts,
+      ))
     }
     _ -> todo
   }

@@ -1,3 +1,4 @@
+import gleam/float
 import gleam/int
 import gleam/list
 import gleam/result
@@ -11,7 +12,11 @@ pub fn lex(
 ) -> Result(#(String, Int, List(Token)), String) {
   case data.0 {
     // Keywords
+    "let" <> rest ->
+      lex(add_token(rest, data.2, token.Let, "let", token.None, data.1))
     // Two Character Tokens
+    "==" <> rest ->
+      lex(add_token(rest, data.2, token.EqualsEquals, "==", token.None, data.1))
     // One Character Tokens
     " " <> rest -> {
       lex(#(rest, data.1, data.2))
@@ -29,8 +34,8 @@ pub fn lex(
       lex(add_token(rest, data.2, token.Star, "*", token.None, data.1))
     "/" <> rest ->
       lex(add_token(rest, data.2, token.Slash, "/", token.None, data.1))
-    "^" <> rest ->
-      lex(add_token(rest, data.2, token.Caret, "^", token.None, data.1))
+    "=" <> rest ->
+      lex(add_token(rest, data.2, token.Equals, "=", token.None, data.1))
 
     _ -> {
       case string.first(data.0) {
@@ -45,14 +50,57 @@ pub fn lex(
                   "Failed to parse numeric literal: " <> num_str
                 }),
               )
-              lex(add_token(
-                rest,
-                data.2,
-                token.Int,
-                num_str,
-                token.IntLiteral(num),
-                data.1,
-              ))
+              case rest {
+                "." <> rest -> {
+                  let #(num_str, rest) = consume_while(rest, utils.is_digit)
+                  use num_after_dot <- result.try(
+                    int.parse(num_str)
+                    |> result.map_error(fn(_) {
+                      "Failed to parse numeric literal after dot: " <> num_str
+                    }),
+                  )
+                  let float_str =
+                    int.to_string(num) <> "." <> int.to_string(num_after_dot)
+                  use parsed_float <- result.try(
+                    float.parse(float_str)
+                    |> result.map_error(fn(_) {
+                      "Failed to parse numeric literal: " <> float_str
+                    }),
+                  )
+                  lex(add_token(
+                    rest,
+                    data.2,
+                    token.Float,
+                    float_str,
+                    token.FloatLiteral(parsed_float),
+                    data.1,
+                  ))
+                }
+                rest -> {
+                  case rest {
+                    "f" <> rest -> {
+                      lex(add_token(
+                        rest,
+                        data.2,
+                        token.Float,
+                        num_str,
+                        token.FloatLiteral(num |> int.to_float),
+                        data.1,
+                      ))
+                    }
+                    _ -> {
+                      lex(add_token(
+                        rest,
+                        data.2,
+                        token.Int,
+                        num_str,
+                        token.IntLiteral(num),
+                        data.1,
+                      ))
+                    }
+                  }
+                }
+              }
             }
             #(_, True) -> {
               let #(ident, rest) =

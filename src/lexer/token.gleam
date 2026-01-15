@@ -6,20 +6,26 @@ pub type TokenLiteral {
 }
 
 pub type TokenType {
-  // Single Token
+  // Single Character
   Plus
   Minus
   Star
   Slash
   LeftParen
   RightParen
-  Caret
+  Equals
 
-  // 
+  // Two Character
+  EqualsEquals
+
+  // Values
   Int
   Float
   String
   Identifier
+
+  // Keywords
+  Let
 }
 
 pub type Token {

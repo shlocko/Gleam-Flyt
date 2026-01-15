@@ -40,7 +40,7 @@ fn parse_term_helper(left: expr.Expression, tokens: List(Token)) -> ParserResult
 }
 
 fn parse_factor(tokens: List(Token)) -> ParserResult {
-  use #(left, rest) <- result.try(parse_exponential(tokens))
+  use #(left, rest) <- result.try(parse_primary(tokens))
   parse_factor_helper(left, rest)
 }
 
@@ -50,30 +50,6 @@ fn parse_factor_helper(
 ) -> ParserResult {
   case tokens {
     [op, ..rest] if op.kind == token.Star || op.kind == token.Slash -> {
-      use #(right, rest2) <- result.try(parse_exponential(rest))
-
-      let expression =
-        expr.Expression(
-          expr.BinaryOperator(op: op.kind, left: left, right: right),
-          value_type: None,
-        )
-      parse_factor_helper(expression, rest2)
-    }
-    _ -> Ok(#(left, tokens))
-  }
-}
-
-fn parse_exponential(tokens: List(Token)) -> ParserResult {
-  use #(left, rest) <- result.try(parse_primary(tokens))
-  parse_exponential_helper(left, rest)
-}
-
-fn parse_exponential_helper(
-  left: expr.Expression,
-  tokens: List(Token),
-) -> ParserResult {
-  case tokens {
-    [op, ..rest] if op.kind == token.Caret -> {
       use #(right, rest2) <- result.try(parse_primary(rest))
 
       let expression =
@@ -113,6 +89,12 @@ pub fn parse_primary(tokens: List(Token)) -> ParserResult {
             }
             _ -> Error("Expected right paren, reached end of tokens.")
           }
+        }
+        token.Float, token.FloatLiteral(num) -> {
+          Ok(#(
+            expr.Expression(expr.Float(num), value_type: Some(types.Float)),
+            rest,
+          ))
         }
         _, _ -> todo
       }
