@@ -124,6 +124,9 @@ pub fn parse_statement(tokens: List(Token)) -> StatementResult {
         token.LeftBrace -> {
           parse_block(rest, [])
         }
+        token.If -> {
+          parse_if(rest)
+        }
         _ -> {
           use #(expression, rest) <- result.try(parse_expression(tokens))
           Ok(#(stmt.Expression(expression: expression), rest))
@@ -149,5 +152,24 @@ fn parse_block(
       }
     }
     _ -> Error("Expected statement or '}', found EOF.")
+  }
+}
+
+fn parse_if(tokens: List(Token)) -> StatementResult {
+  use #(condition, rest) <- result.try(parse_expression(tokens))
+  use #(if_block, rest) <- result.try(parse_statement(rest))
+  case rest {
+    [tok, ..rest] -> {
+      case tok.kind {
+        token.Else -> {
+          use #(else_block, rest) <- result.try(parse_statement(rest))
+          Ok(#(stmt.If(condition, if_block, Some(else_block)), rest))
+        }
+        _ -> {
+          Ok(#(stmt.If(condition, if_block, option.None), rest))
+        }
+      }
+    }
+    _ -> Ok(#(stmt.If(condition, if_block, option.None), rest))
   }
 }

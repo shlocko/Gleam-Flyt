@@ -13,7 +13,7 @@ import type_checker
 pub fn main() -> Result(Nil, String) {
   // echo "_ => "
   // echo utils.check_utf("_")
-  use #(_, _, tokens) <- result.try(lexer.lex(#("{1+2}", 0, [])))
+  use #(_, _, tokens) <- result.try(lexer.lex(#("if 1+1 {1+1}", 0, [])))
   let tokens = tokens |> list.reverse
   echo tokens
   echo parser.parse_statement(tokens)

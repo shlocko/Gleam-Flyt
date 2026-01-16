@@ -1,7 +1,12 @@
+import gleam/option.{type Option}
 import parser/expression as expr
 
 pub type Statement {
-  If(condition: expr.Expression, if_block: Statement, else_block: Statement)
+  If(
+    condition: expr.Expression,
+    if_block: Statement,
+    else_block: Option(Statement),
+  )
   Block(statements: List(Statement))
   Expression(expression: expr.Expression)
 }

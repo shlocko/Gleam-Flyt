@@ -59,12 +59,23 @@ pub fn type_check_statement(
           case expression.value_type {
             Some(types.Bool) -> {
               use if_block <- result.try(type_check_statement(if_block))
-              use else_block <- result.try(type_check_statement(else_block))
-              Ok(stmt.If(
-                condition: expression,
-                if_block: if_block,
-                else_block: else_block,
-              ))
+              case else_block {
+                Some(blk) -> {
+                  use else_block <- result.try(type_check_statement(blk))
+                  Ok(stmt.If(
+                    condition: expression,
+                    if_block: if_block,
+                    else_block: Some(else_block),
+                  ))
+                }
+                None -> {
+                  Ok(stmt.If(
+                    condition: expression,
+                    if_block: if_block,
+                    else_block: None,
+                  ))
+                }
+              }
             }
             _ -> Error("Expected 'Bool' type inside 'if' condition expression.")
           }
