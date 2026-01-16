@@ -8,16 +8,20 @@ import gleam/list
 import gleam/result
 import lexer/token
 import parser/expression.{type Expression} as expr
+import parser/statement as stmt
 
-pub fn compile_program(expression: Expression) -> Result(json.Json, String) {
-  use #(instructions, consts) <- result.try(
-    generate_expression(expression, [], []),
-  )
-  let instructions =
-    [gen_types.Instruction("Print", []), ..instructions] |> list.reverse
-  let instructions = [gen_types.Instruction("Main", []), ..instructions]
-  let consts = consts |> list.reverse
-  Ok(encoder.encode_program(consts, [], instructions))
+pub fn compile_program(
+  program: List(stmt.Statement),
+) -> Result(json.Json, String) {
+  // use #(instructions, consts) <- result.try(
+  //   generate_expression(expression, [], []),
+  // )
+  // let instructions =
+  //   [gen_types.Instruction("Print", []), ..instructions] |> list.reverse
+  // let instructions = [gen_types.Instruction("Main", []), ..instructions]
+  // let consts = consts |> list.reverse
+  // Ok(encoder.encode_program(consts, [], instructions))
+  Ok(json.string("ok"))
 }
 
 pub fn generate_expression(

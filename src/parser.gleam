@@ -2,28 +2,39 @@ import gleam/option.{type Option, None, Some}
 import gleam/result
 import lexer/token.{type Token}
 import parser/expression as expr
+import parser/statement as stmt
 import type_checker/types
 
-pub type ParserState =
+pub type ExpressionState =
   #(expr.Expression, List(Token))
 
-pub type ParserResult =
-  Result(ParserState, String)
+pub type ExpressionResult =
+  Result(ExpressionState, String)
 
-pub fn parse(tokens: List(Token)) -> ParserResult {
-  parse_expression(tokens)
+pub type StatementState =
+  #(stmt.Statement, List(Token))
+
+pub type StatementResult =
+  Result(StatementState, String)
+
+pub fn parse(tokens: List(Token)) -> StatementResult {
+  // parse_expression(tokens)
+  parse_statement(tokens)
 }
 
-fn parse_expression(tokens: List(Token)) -> ParserResult {
+fn parse_expression(tokens: List(Token)) -> ExpressionResult {
   parse_term(tokens)
 }
 
-fn parse_term(tokens: List(Token)) -> ParserResult {
+fn parse_term(tokens: List(Token)) -> ExpressionResult {
   use #(left, rest) <- result.try(parse_factor(tokens))
   parse_term_helper(left, rest)
 }
 
-fn parse_term_helper(left: expr.Expression, tokens: List(Token)) -> ParserResult {
+fn parse_term_helper(
+  left: expr.Expression,
+  tokens: List(Token),
+) -> ExpressionResult {
   case tokens {
     [op, ..rest] if op.kind == token.Plus || op.kind == token.Minus -> {
       use #(right, rest2) <- result.try(parse_factor(rest))
@@ -39,7 +50,7 @@ fn parse_term_helper(left: expr.Expression, tokens: List(Token)) -> ParserResult
   }
 }
 
-fn parse_factor(tokens: List(Token)) -> ParserResult {
+fn parse_factor(tokens: List(Token)) -> ExpressionResult {
   use #(left, rest) <- result.try(parse_primary(tokens))
   parse_factor_helper(left, rest)
 }
@@ -47,7 +58,7 @@ fn parse_factor(tokens: List(Token)) -> ParserResult {
 fn parse_factor_helper(
   left: expr.Expression,
   tokens: List(Token),
-) -> ParserResult {
+) -> ExpressionResult {
   case tokens {
     [op, ..rest] if op.kind == token.Star || op.kind == token.Slash -> {
       use #(right, rest2) <- result.try(parse_primary(rest))
@@ -63,7 +74,7 @@ fn parse_factor_helper(
   }
 }
 
-pub fn parse_primary(tokens: List(Token)) -> ParserResult {
+pub fn parse_primary(tokens: List(Token)) -> ExpressionResult {
   case tokens {
     [tok, ..rest] -> {
       case tok.kind, tok.literal {
@@ -96,9 +107,47 @@ pub fn parse_primary(tokens: List(Token)) -> ParserResult {
             rest,
           ))
         }
-        _, _ -> todo
+        _, _ -> {
+          echo tok
+          todo
+        }
       }
     }
     _ -> todo
+  }
+}
+
+pub fn parse_statement(tokens: List(Token)) -> StatementResult {
+  case tokens {
+    [tok, ..rest] -> {
+      case tok.kind {
+        token.LeftBrace -> {
+          parse_block(rest, [])
+        }
+        _ -> {
+          use #(expression, rest) <- result.try(parse_expression(tokens))
+          Ok(#(stmt.Expression(expression: expression), rest))
+        }
+      }
+    }
+    _ -> todo
+  }
+}
+
+fn parse_block(
+  tokens: List(Token),
+  statements: List(stmt.Statement),
+) -> StatementResult {
+  case tokens {
+    [tok, ..rest] -> {
+      case tok.kind {
+        token.RightBrace -> Ok(#(stmt.Block(statements), rest))
+        _ -> {
+          use #(statement, rest) <- result.try(parse_statement(tokens))
+          parse_block(rest, [statement, ..statements])
+        }
+      }
+    }
+    _ -> Error("Expected statement or '}', found EOF.")
   }
 }

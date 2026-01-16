@@ -14,6 +14,8 @@ pub type TokenType {
   LeftParen
   RightParen
   Equals
+  LeftBrace
+  RightBrace
 
   // Two Character
   EqualsEquals
@@ -26,6 +28,8 @@ pub type TokenType {
 
   // Keywords
   Let
+  If
+  Else
 }
 
 pub type Token {

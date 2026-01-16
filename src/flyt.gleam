@@ -13,15 +13,20 @@ import type_checker
 pub fn main() -> Result(Nil, String) {
   // echo "_ => "
   // echo utils.check_utf("_")
-  case compile_and_run("3f*(1.1-0.3)/2f") {
-    Ok(_) -> {
-      Ok(Nil)
-    }
-    Error(str) -> {
-      io.println(str)
-      Error(str)
-    }
-  }
+  use #(_, _, tokens) <- result.try(lexer.lex(#("{1+2}", 0, [])))
+  let tokens = tokens |> list.reverse
+  echo tokens
+  echo parser.parse_statement(tokens)
+  Ok(Nil)
+  // case compile_and_run("1+1") {
+  //   Ok(_) -> {
+  //     Ok(Nil)
+  //   }
+  //   Error(str) -> {
+  //     io.println(str)
+  //     Error(str)
+  //   }
+  // }
 }
 
 fn compile_and_run(source: String) -> Result(Nil, String) {
@@ -29,9 +34,9 @@ fn compile_and_run(source: String) -> Result(Nil, String) {
 
   let tokens = list.reverse(tokens)
   // echo tokens
-  use #(expr, _leftover_tokens) <- result.try(parser.parse(tokens))
-  use checked <- result.try(type_checker.type_expression(expr))
-  use program <- result.try(code_gen.compile_program(checked))
+  use #(stmt, _leftover_tokens) <- result.try(parser.parse(tokens))
+  use checked <- result.try(type_checker.type_check_statement(stmt))
+  use program <- result.try(code_gen.compile_program([checked]))
   let _ = simplifile.write("program.jef", program |> json.to_string)
 
   let _ = echo program

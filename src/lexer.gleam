@@ -14,6 +14,10 @@ pub fn lex(
     // Keywords
     "let" <> rest ->
       lex(add_token(rest, data.2, token.Let, "let", token.None, data.1))
+    "if" <> rest ->
+      lex(add_token(rest, data.2, token.If, "if", token.None, data.1))
+    "else" <> rest ->
+      lex(add_token(rest, data.2, token.Else, "else", token.None, data.1))
     // Two Character Tokens
     "==" <> rest ->
       lex(add_token(rest, data.2, token.EqualsEquals, "==", token.None, data.1))
@@ -26,6 +30,10 @@ pub fn lex(
       lex(add_token(rest, data.2, token.LeftParen, "(", token.None, data.1))
     ")" <> rest ->
       lex(add_token(rest, data.2, token.RightParen, ")", token.None, data.1))
+    "{" <> rest ->
+      lex(add_token(rest, data.2, token.LeftBrace, "{", token.None, data.1))
+    "}" <> rest ->
+      lex(add_token(rest, data.2, token.RightBrace, "}", token.None, data.1))
     "+" <> rest ->
       lex(add_token(rest, data.2, token.Plus, "+", token.None, data.1))
     "-" <> rest ->
