@@ -1,3 +1,4 @@
+import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
 import lexer/token.{type Token}
@@ -117,11 +118,39 @@ pub fn parse_primary(tokens: List(Token)) -> ExpressionResult {
   }
 }
 
+pub fn parse_program(
+  tokens: List(Token),
+) -> Result(List(stmt.Statement), String) {
+  use #(statements, tokens) <- result.try(parse_program_helper(tokens, []))
+  Ok(statements |> list.reverse)
+}
+
+fn parse_program_helper(
+  tokens: List(Token),
+  statements: List(stmt.Statement),
+) -> Result(#(List(stmt.Statement), List(Token)), String) {
+  use #(statement, tokens) <- result.try(parse_statement(tokens))
+  echo tokens
+  case tokens {
+    [] -> {
+      Ok(#([statement, ..statements], []))
+    }
+    tokens -> {
+      echo "helper matched tokens"
+      echo tokens
+      parse_program_helper(tokens, [statement, ..statements])
+    }
+  }
+}
+
 pub fn parse_statement(tokens: List(Token)) -> StatementResult {
+  echo "statement"
+  echo tokens
   case tokens {
     [tok, ..rest] -> {
       case tok.kind {
         token.LeftBrace -> {
+          echo "parse block"
           parse_block(rest, [])
         }
         token.If -> {
@@ -156,20 +185,22 @@ fn parse_block(
 }
 
 fn parse_if(tokens: List(Token)) -> StatementResult {
-  use #(condition, rest) <- result.try(parse_expression(tokens))
-  use #(if_block, rest) <- result.try(parse_statement(rest))
-  case rest {
+  use #(condition, tokens) <- result.try(parse_expression(tokens))
+  use #(if_block, tokens) <- result.try(parse_statement(tokens))
+  case tokens {
     [tok, ..rest] -> {
       case tok.kind {
         token.Else -> {
           use #(else_block, rest) <- result.try(parse_statement(rest))
+          echo "after else"
+          echo rest
           Ok(#(stmt.If(condition, if_block, Some(else_block)), rest))
         }
         _ -> {
-          Ok(#(stmt.If(condition, if_block, option.None), rest))
+          Ok(#(stmt.If(condition, if_block, option.None), tokens))
         }
       }
     }
-    _ -> Ok(#(stmt.If(condition, if_block, option.None), rest))
+    _ -> Ok(#(stmt.If(condition, if_block, option.None), tokens))
   }
 }
