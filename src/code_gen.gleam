@@ -8,20 +8,83 @@ import gleam/list
 import gleam/result
 import lexer/token
 import parser/expression.{type Expression} as expr
-import parser/statement as stmt
+import parser/statement.{type Statement} as stmt
 
 pub fn compile_program(
   program: List(stmt.Statement),
 ) -> Result(json.Json, String) {
-  // use #(instructions, consts) <- result.try(
-  //   generate_expression(expression, [], []),
-  // )
+  echo program
+  use #(instructions, consts) <- result.try(
+    generate_statements(program, [], []),
+  )
   // let instructions =
   //   [gen_types.Instruction("Print", []), ..instructions] |> list.reverse
-  // let instructions = [gen_types.Instruction("Main", []), ..instructions]
-  // let consts = consts |> list.reverse
-  // Ok(encoder.encode_program(consts, [], instructions))
-  Ok(json.string("ok"))
+  let instructions = instructions |> list.reverse
+  let instructions = [gen_types.Instruction("Main", []), ..instructions]
+  Ok(encoder.encode_program(consts, [], instructions))
+  // Ok(json.string("ok"))
+}
+
+fn generate_statements(
+  statements: List(Statement),
+  instructions: List(Instruction),
+  consts: List(JEFValue),
+) -> Result(#(List(Instruction), List(JEFValue)), String) {
+  case statements {
+    [] -> Ok(#(instructions, consts))
+    [statement, ..rest] -> {
+      echo rest
+      use #(instructions, consts) <- result.try(generate_statement(
+        statement,
+        instructions,
+        consts,
+      ))
+      generate_statements(rest, instructions, consts)
+    }
+  }
+}
+
+pub fn generate_statement(
+  statement: Statement,
+  instructions: List(Instruction),
+  consts: List(JEFValue),
+) -> Result(#(List(Instruction), List(JEFValue)), String) {
+  case statement {
+    stmt.Expression(expr) -> {
+      use #(instructions_expr, consts_expr) <- result.try(generate_expression(
+        expr,
+        instructions,
+        consts,
+      ))
+      let instructions_expr = [
+        gen_types.Instruction("Print", []),
+        ..instructions_expr
+      ]
+      Ok(#(instructions_expr, consts_expr))
+    }
+    stmt.Block(statements) -> {
+      generate_block(statements, instructions, consts)
+    }
+    _ -> todo
+  }
+}
+
+fn generate_block(
+  statements: List(Statement),
+  instructions: List(Instruction),
+  consts: List(JEFValue),
+) -> Result(#(List(Instruction), List(JEFValue)), String) {
+  case statements {
+    [] -> Ok(#(instructions, consts))
+    [statement, ..rest] -> {
+      use #(instructions, consts) <- result.try(generate_statement(
+        statement,
+        instructions,
+        consts,
+      ))
+      generate_block(rest, instructions, consts)
+    }
+  }
 }
 
 pub fn generate_expression(
@@ -66,6 +129,18 @@ pub fn generate_expression(
             right_consts,
           ))
         }
+        token.EqualsEquals -> {
+          Ok(#(
+            [gen_types.Instruction("Equal", []), ..right_instructions],
+            right_consts,
+          ))
+        }
+        token.BangEquals -> {
+          Ok(#(
+            [gen_types.Instruction("NotEqual", []), ..right_instructions],
+            right_consts,
+          ))
+        }
         _ -> Error("Invalid binary operator")
       }
     }
@@ -74,6 +149,7 @@ pub fn generate_expression(
     }
     expr.Int(num) -> {
       let #(idx, consts) = utils.find_or_push(gen_types.Int(num), consts)
+      echo num
       echo idx
       echo consts
       Ok(#(

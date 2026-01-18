@@ -19,6 +19,7 @@ pub type TokenType {
 
   // Two Character
   EqualsEquals
+  BangEquals
 
   // Values
   Int

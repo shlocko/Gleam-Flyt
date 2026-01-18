@@ -21,6 +21,8 @@ pub fn lex(
     // Two Character Tokens
     "==" <> rest ->
       lex(add_token(rest, data.2, token.EqualsEquals, "==", token.None, data.1))
+    "!=" <> rest ->
+      lex(add_token(rest, data.2, token.BangEquals, "!=", token.None, data.1))
     // One Character Tokens
     " " <> rest -> {
       lex(#(rest, data.1, data.2))

@@ -97,3 +97,25 @@ pub fn type_check_statement(
     }
   }
 }
+
+pub fn type_check_program(
+  statements: List(stmt.Statement),
+) -> Result(List(stmt.Statement), String) {
+  // echo statements
+  use #(_, checked) <- result.try(type_check_program_helper(statements, []))
+  Ok(checked |> list.reverse)
+}
+
+fn type_check_program_helper(
+  statements: List(stmt.Statement),
+  checked: List(stmt.Statement),
+) -> Result(#(List(stmt.Statement), List(stmt.Statement)), String) {
+  case statements {
+    [] -> Ok(#([], checked))
+    [statement, ..rest] -> {
+      use checked_statement <- result.try(type_check_statement(statement))
+      let checked = [checked_statement, ..checked]
+      type_check_program_helper(rest, checked)
+    }
+  }
+}

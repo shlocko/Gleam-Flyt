@@ -10,8 +10,9 @@ pub fn find_or_push(
       #(idx, items)
     }
     Error(_) -> {
+      let items = items |> list.reverse
       let new_items = [val, ..items]
-      #(list.length(items), new_items)
+      #(list.length(items), new_items |> list.reverse)
     }
   }
 }

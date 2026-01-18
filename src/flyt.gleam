@@ -13,22 +13,21 @@ import type_checker
 pub fn main() -> Result(Nil, String) {
   // echo "_ => "
   // echo utils.check_utf("_")
-  use #(_, _, tokens) <- result.try(
-    lexer.lex(#("if 1+1 {1+2} else if 2+1 {2+2} {8+8}", 0, [])),
-  )
-  let tokens = tokens |> list.reverse
-  echo tokens
-  echo parser.parse_program(tokens)
-  Ok(Nil)
-  // case compile_and_run("1+1") {
-  //   Ok(_) -> {
-  //     Ok(Nil)
-  //   }
-  //   Error(str) -> {
-  //     io.println(str)
-  //     Error(str)
-  //   }
-  // }
+  // use #(_, _, tokens) <- result.try(
+  //   lexer.lex(#("if 1+1 {1+2} else if 2+1 {2+2} {8+8}", 0, [])),
+  // )
+  // let tokens = tokens |> list.reverse
+  // echo tokens
+  // echo parser.parse_program(tokens)
+  case compile_and_run("{1+1} {2+2}{3+3}{1+2 9+9 1==2} 1==1") {
+    Ok(_) -> {
+      Ok(Nil)
+    }
+    Error(str) -> {
+      io.println(str)
+      Error(str)
+    }
+  }
 }
 
 fn compile_and_run(source: String) -> Result(Nil, String) {
@@ -36,9 +35,12 @@ fn compile_and_run(source: String) -> Result(Nil, String) {
 
   let tokens = list.reverse(tokens)
   // echo tokens
-  use #(stmt, _leftover_tokens) <- result.try(parser.parse(tokens))
-  use checked <- result.try(type_checker.type_check_statement(stmt))
-  use program <- result.try(code_gen.compile_program([checked]))
+  use stmts <- result.try(parser.parse(tokens))
+  // echo stmts
+  use checked <- result.try(type_checker.type_check_program(stmts))
+  echo checked
+  use program <- result.try(code_gen.compile_program(checked))
+  echo program |> json.to_string
   let _ = simplifile.write("program.jef", program |> json.to_string)
 
   let _ = echo program
