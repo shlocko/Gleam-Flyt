@@ -1,6 +1,7 @@
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
+import lexer/token
 import parser/expression as expr
 import parser/statement as stmt
 import type_checker/types
@@ -33,14 +34,19 @@ pub fn type_expression(
       use right_typed <- result.try(type_expression(right))
       case left_typed.value_type == right_typed.value_type {
         True ->
-          Ok(expr.Expression(
-            kind: expr.BinaryOperator(
-              op: op,
-              left: left_typed,
-              right: right_typed,
+          Ok(
+            expr.Expression(
+              kind: expr.BinaryOperator(
+                op: op,
+                left: left_typed,
+                right: right_typed,
+              ),
+              value_type: case op {
+                token.EqualsEquals | token.BangEquals -> Some(types.Bool)
+                _ -> left.value_type
+              },
             ),
-            value_type: left_typed.value_type,
-          ))
+          )
         False ->
           Error("Mismatched types in left and right of binary expression.")
       }

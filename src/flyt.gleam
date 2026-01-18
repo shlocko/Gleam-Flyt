@@ -19,7 +19,18 @@ pub fn main() -> Result(Nil, String) {
   // let tokens = tokens |> list.reverse
   // echo tokens
   // echo parser.parse_program(tokens)
-  case compile_and_run("{1+1} {2+2}{3+3}{1+2 9+9 1==2} 1==1") {
+  case
+    compile_and_run(
+      "if 1==2
+        2+2
+      else if 1==2
+        3+3
+      else
+        4+4
+      
+   5+5",
+    )
+  {
     Ok(_) -> {
       Ok(Nil)
     }
