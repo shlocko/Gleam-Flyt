@@ -3,4 +3,5 @@ pub type FlytType {
   Float
   String
   Bool
+  Nil
 }

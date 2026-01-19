@@ -31,6 +31,7 @@ pub type TokenType {
   Let
   If
   Else
+  Print
 }
 
 pub type Token {

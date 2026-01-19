@@ -1,20 +1,24 @@
 ;; This is a comment
-struct Pos(clone, equals){
+struct Pos{
     x: Int,
     y: Int,
-    clone: fn(){
-        return pos(this.x, this.y)
-    },
-	equals: fn(other: Pos){
-		return this.x == other.x && this.y == other.y
+	foo: fn() {
+		print("This is a method")
 	}
 }
 
 fn main(){
     print("Hello World")
-    let mut pos_player = pos(10, 15)
-    let pos_enemy = pos_player.clone()
-
-    print(pos_player == pos_enemy) ;; true
-    pos_enemy.x += 7 ;; this is an error, not mutable
+    let mut pos_player = Pos(10, 15)
+	pos_player.x = if pos_player.y > 12 {pos_player.x + 5} else {pos_player.x - 5}
 }
+
+fn pure double(x: Int) -> Int: x*2
+fn pure double(x: Int) -> Int  x*2
+fn pure double(x: Int): x*2
+fn pure double(x: Int)  x*2
+fn pure double(x: Int) -> Int {
+	x*2
+}
+
+

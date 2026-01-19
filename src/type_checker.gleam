@@ -2,41 +2,40 @@ import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
 import lexer/token
-import parser/expression as expr
-import parser/statement as stmt
+import parser/ast
 import type_checker/types
 
 pub fn type_expression(
-  expression: expr.Expression,
-) -> Result(expr.Expression, String) {
+  expression: ast.Expression,
+) -> Result(ast.Expression, String) {
   case expression.kind, expression.value_type {
     _, Some(_) -> Ok(expression)
-    expr.Int(_), _ -> {
-      Ok(expr.Expression(..expression, value_type: Some(types.Int)))
+    ast.Int(_), _ -> {
+      Ok(ast.Expression(..expression, value_type: Some(types.Int)))
     }
-    expr.Float(_), _ -> {
-      Ok(expr.Expression(..expression, value_type: Some(types.Float)))
+    ast.Float(_), _ -> {
+      Ok(ast.Expression(..expression, value_type: Some(types.Float)))
     }
-    expr.Group(inner), _ -> {
+    ast.Group(inner), _ -> {
       case inner.value_type {
-        Some(kind) -> Ok(expr.Expression(..expression, value_type: Some(kind)))
+        Some(kind) -> Ok(ast.Expression(..expression, value_type: Some(kind)))
         None -> {
           use inner_typed <- result.try(type_expression(inner))
-          Ok(expr.Expression(
-            kind: expr.Group(inner_typed),
+          Ok(ast.Expression(
+            kind: ast.Group(inner_typed),
             value_type: inner_typed.value_type,
           ))
         }
       }
     }
-    expr.BinaryOperator(op, left, right), _ -> {
+    ast.BinaryOperator(op, left, right), _ -> {
       use left_typed <- result.try(type_expression(left))
       use right_typed <- result.try(type_expression(right))
       case left_typed.value_type == right_typed.value_type {
         True ->
           Ok(
-            expr.Expression(
-              kind: expr.BinaryOperator(
+            ast.Expression(
+              kind: ast.BinaryOperator(
                 op: op,
                 left: left_typed,
                 right: right_typed,
@@ -51,34 +50,33 @@ pub fn type_expression(
           Error("Mismatched types in left and right of binary expression.")
       }
     }
-    expr.Identifier(_name), _ -> todo
-  }
-}
-
-pub fn type_check_statement(
-  statement: stmt.Statement,
-) -> Result(stmt.Statement, String) {
-  case statement {
-    stmt.If(condition, if_block, else_block) -> {
+    ast.Identifier(_name), _ -> todo
+    ast.If(condition, if_block, else_block), _ -> {
       case type_expression(condition) {
         Ok(expression) -> {
           case expression.value_type {
             Some(types.Bool) -> {
-              use if_block <- result.try(type_check_statement(if_block))
+              use if_block <- result.try(type_expression(if_block))
               case else_block {
                 Some(blk) -> {
-                  use else_block <- result.try(type_check_statement(blk))
-                  Ok(stmt.If(
-                    condition: expression,
-                    if_block: if_block,
-                    else_block: Some(else_block),
+                  use else_block <- result.try(type_expression(blk))
+                  Ok(ast.Expression(
+                    ast.If(
+                      condition: expression,
+                      if_block: if_block,
+                      else_block: Some(else_block),
+                    ),
+                    None,
                   ))
                 }
                 None -> {
-                  Ok(stmt.If(
-                    condition: expression,
-                    if_block: if_block,
-                    else_block: None,
+                  Ok(ast.Expression(
+                    ast.If(
+                      condition: expression,
+                      if_block: if_block,
+                      else_block: None,
+                    ),
+                    None,
                   ))
                 }
               }
@@ -89,38 +87,37 @@ pub fn type_check_statement(
         Error(e) -> Error(e)
       }
     }
-    stmt.Block(statements) -> {
-      // list.try_each(statements, type_check_statement)
-      use statements <- result.try(list.try_map(
-        statements,
-        type_check_statement,
-      ))
-      Ok(stmt.Block(statements))
+    ast.Block(expressions), _ -> {
+      use expressions <- result.try(list.try_map(expressions, type_expression))
+      use last <- result.try(
+        expressions
+        |> list.last
+        |> result.map_error(fn(_) { "Unexpected empty list" }),
+      )
+      Ok(ast.Expression(ast.Block(expressions), last.value_type))
     }
-    stmt.Expression(expression) -> {
-      use expression <- result.try(type_expression(expression))
-      Ok(stmt.Expression(expression))
+    ast.Print(_), _ -> {
+      Ok(expression)
     }
   }
 }
 
 pub fn type_check_program(
-  statements: List(stmt.Statement),
-) -> Result(List(stmt.Statement), String) {
-  // echo statements
-  use #(_, checked) <- result.try(type_check_program_helper(statements, []))
+  expressions: List(ast.Expression),
+) -> Result(List(ast.Expression), String) {
+  use #(_, checked) <- result.try(type_check_program_helper(expressions, []))
   Ok(checked |> list.reverse)
 }
 
 fn type_check_program_helper(
-  statements: List(stmt.Statement),
-  checked: List(stmt.Statement),
-) -> Result(#(List(stmt.Statement), List(stmt.Statement)), String) {
-  case statements {
+  expressions: List(ast.Expression),
+  checked: List(ast.Expression),
+) -> Result(#(List(ast.Expression), List(ast.Expression)), String) {
+  case expressions {
     [] -> Ok(#([], checked))
-    [statement, ..rest] -> {
-      use checked_statement <- result.try(type_check_statement(statement))
-      let checked = [checked_statement, ..checked]
+    [expression, ..rest] -> {
+      use checked_expression <- result.try(type_expression(expression))
+      let checked = [checked_expression, ..checked]
       type_check_program_helper(rest, checked)
     }
   }

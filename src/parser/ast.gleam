@@ -13,4 +13,11 @@ pub type ExprKind {
   Identifier(String)
   BinaryOperator(op: TokenType, left: Expression, right: Expression)
   Group(Expression)
+  If(
+    condition: Expression,
+    if_block: Expression,
+    else_block: Option(Expression),
+  )
+  Block(statements: List(Expression))
+  Print(Expression)
 }

@@ -21,22 +21,24 @@ pub fn main() -> Result(Nil, String) {
   // echo parser.parse_program(tokens)
   case
     compile_and_run(
-      "if 1==2
-        2+2
-      else if 1==2
-        3+3
-      else
-        4+4
-      
-   5+5",
+      "
+print {if 1==2
+  2+2
+else if 1==2
+  3+3
+else
+  4+4
+1+8}
+print (print 81)
+        ",
     )
   {
     Ok(_) -> {
       Ok(Nil)
     }
     Error(str) -> {
-      io.println(str)
-      Error(str)
+      // io.println(str)
+      panic as str
     }
   }
 }

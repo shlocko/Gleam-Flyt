@@ -2,23 +2,16 @@ import gleam/list
 import gleam/option.{None, Some}
 import gleam/result
 import lexer/token.{type Token}
-import parser/expression as expr
-import parser/statement as stmt
+import parser/ast
 import type_checker/types
 
 pub type ExpressionState =
-  #(expr.Expression, List(Token))
+  #(ast.Expression, List(Token))
 
 pub type ExpressionResult =
   Result(ExpressionState, String)
 
-pub type StatementState =
-  #(stmt.Statement, List(Token))
-
-pub type StatementResult =
-  Result(StatementState, String)
-
-pub fn parse(tokens: List(Token)) -> Result(List(stmt.Statement), String) {
+pub fn parse(tokens: List(Token)) -> Result(List(ast.Expression), String) {
   // parse_expression(tokens)
   parse_program(tokens)
 }
@@ -33,7 +26,7 @@ fn parse_equality(tokens: List(Token)) -> ExpressionResult {
 }
 
 fn parse_equality_helper(
-  left: expr.Expression,
+  left: ast.Expression,
   tokens: List(Token),
 ) -> ExpressionResult {
   case tokens {
@@ -43,8 +36,8 @@ fn parse_equality_helper(
       use #(right, rest2) <- result.try(parse_term(rest))
 
       let expression =
-        expr.Expression(
-          kind: expr.BinaryOperator(op: op.kind, left: left, right: right),
+        ast.Expression(
+          kind: ast.BinaryOperator(op: op.kind, left: left, right: right),
           value_type: None,
         )
       parse_equality_helper(expression, rest2)
@@ -59,7 +52,7 @@ fn parse_term(tokens: List(Token)) -> ExpressionResult {
 }
 
 fn parse_term_helper(
-  left: expr.Expression,
+  left: ast.Expression,
   tokens: List(Token),
 ) -> ExpressionResult {
   case tokens {
@@ -67,8 +60,8 @@ fn parse_term_helper(
       use #(right, rest2) <- result.try(parse_factor(rest))
 
       let expression =
-        expr.Expression(
-          kind: expr.BinaryOperator(op: op.kind, left: left, right: right),
+        ast.Expression(
+          kind: ast.BinaryOperator(op: op.kind, left: left, right: right),
           value_type: None,
         )
       parse_term_helper(expression, rest2)
@@ -83,7 +76,7 @@ fn parse_factor(tokens: List(Token)) -> ExpressionResult {
 }
 
 fn parse_factor_helper(
-  left: expr.Expression,
+  left: ast.Expression,
   tokens: List(Token),
 ) -> ExpressionResult {
   case tokens {
@@ -91,8 +84,8 @@ fn parse_factor_helper(
       use #(right, rest2) <- result.try(parse_primary(rest))
 
       let expression =
-        expr.Expression(
-          expr.BinaryOperator(op: op.kind, left: left, right: right),
+        ast.Expression(
+          ast.BinaryOperator(op: op.kind, left: left, right: right),
           value_type: None,
         )
       parse_factor_helper(expression, rest2)
@@ -106,10 +99,7 @@ pub fn parse_primary(tokens: List(Token)) -> ExpressionResult {
     [tok, ..rest] -> {
       case tok.kind, tok.literal {
         token.Int, token.IntLiteral(num) -> {
-          Ok(#(
-            expr.Expression(expr.Int(num), value_type: Some(types.Int)),
-            rest,
-          ))
+          Ok(#(ast.Expression(ast.Int(num), value_type: Some(types.Int)), rest))
         }
         token.LeftParen, _ -> {
           use #(expression, rest) <- result.try(parse_expression(rest))
@@ -118,7 +108,7 @@ pub fn parse_primary(tokens: List(Token)) -> ExpressionResult {
               case tok.kind {
                 token.RightParen -> {
                   Ok(#(
-                    expr.Expression(expr.Group(expression), value_type: None),
+                    ast.Expression(ast.Group(expression), value_type: None),
                     rest,
                   ))
                 }
@@ -130,9 +120,19 @@ pub fn parse_primary(tokens: List(Token)) -> ExpressionResult {
         }
         token.Float, token.FloatLiteral(num) -> {
           Ok(#(
-            expr.Expression(expr.Float(num), value_type: Some(types.Float)),
+            ast.Expression(ast.Float(num), value_type: Some(types.Float)),
             rest,
           ))
+        }
+        token.If, _ -> {
+          parse_if(rest)
+        }
+        token.LeftBrace, _ -> {
+          parse_block(rest, [])
+        }
+        token.Print, _ -> {
+          use #(expression, rest) <- result.try(parse_expression(rest))
+          Ok(#(ast.Expression(ast.Print(expression), Some(types.Nil)), rest))
         }
         _, _ -> {
           echo tok
@@ -146,61 +146,44 @@ pub fn parse_primary(tokens: List(Token)) -> ExpressionResult {
 
 pub fn parse_program(
   tokens: List(Token),
-) -> Result(List(stmt.Statement), String) {
-  use #(statements, _tokens) <- result.try(parse_program_helper(tokens, []))
-  Ok(statements |> list.reverse)
+) -> Result(List(ast.Expression), String) {
+  use #(expressions, _tokens) <- result.try(parse_program_helper(tokens, []))
+  Ok(expressions |> list.reverse)
 }
 
 fn parse_program_helper(
   tokens: List(Token),
-  statements: List(stmt.Statement),
-) -> Result(#(List(stmt.Statement), List(Token)), String) {
-  use #(statement, tokens) <- result.try(parse_statement(tokens))
+  expressions: List(ast.Expression),
+) -> Result(#(List(ast.Expression), List(Token)), String) {
+  use #(expression, tokens) <- result.try(parse_expression(tokens))
   echo tokens
   case tokens {
     [] -> {
-      Ok(#([statement, ..statements], []))
+      Ok(#([expression, ..expressions], []))
     }
     tokens -> {
       echo "helper matched tokens"
       echo tokens
-      parse_program_helper(tokens, [statement, ..statements])
+      parse_program_helper(tokens, [expression, ..expressions])
     }
-  }
-}
-
-pub fn parse_statement(tokens: List(Token)) -> StatementResult {
-  case tokens {
-    [tok, ..rest] -> {
-      case tok.kind {
-        token.LeftBrace -> {
-          echo "parse block"
-          parse_block(rest, [])
-        }
-        token.If -> {
-          parse_if(rest)
-        }
-        _ -> {
-          use #(expression, rest) <- result.try(parse_expression(tokens))
-          Ok(#(stmt.Expression(expression: expression), rest))
-        }
-      }
-    }
-    _ -> Error("Expected statement, found EOF.")
   }
 }
 
 fn parse_block(
   tokens: List(Token),
-  statements: List(stmt.Statement),
-) -> StatementResult {
+  expressions: List(ast.Expression),
+) -> ExpressionResult {
   case tokens {
     [tok, ..rest] -> {
       case tok.kind {
-        token.RightBrace -> Ok(#(stmt.Block(statements |> list.reverse), rest))
+        token.RightBrace ->
+          Ok(#(
+            ast.Expression(ast.Block(expressions |> list.reverse), None),
+            rest,
+          ))
         _ -> {
-          use #(statement, rest) <- result.try(parse_statement(tokens))
-          parse_block(rest, [statement, ..statements])
+          use #(expression, rest) <- result.try(parse_expression(tokens))
+          parse_block(rest, [expression, ..expressions])
         }
       }
     }
@@ -208,21 +191,31 @@ fn parse_block(
   }
 }
 
-fn parse_if(tokens: List(Token)) -> StatementResult {
+fn parse_if(tokens: List(Token)) -> ExpressionResult {
   use #(condition, tokens) <- result.try(parse_expression(tokens))
-  use #(if_block, tokens) <- result.try(parse_statement(tokens))
+  use #(if_block, tokens) <- result.try(parse_expression(tokens))
   case tokens {
     [tok, ..rest] -> {
       case tok.kind {
         token.Else -> {
-          use #(else_block, rest) <- result.try(parse_statement(rest))
-          Ok(#(stmt.If(condition, if_block, Some(else_block)), rest))
+          use #(else_block, rest) <- result.try(parse_expression(rest))
+          Ok(#(
+            ast.Expression(ast.If(condition, if_block, Some(else_block)), None),
+            rest,
+          ))
         }
         _ -> {
-          Ok(#(stmt.If(condition, if_block, option.None), tokens))
+          Ok(#(
+            ast.Expression(ast.If(condition, if_block, option.None), None),
+            tokens,
+          ))
         }
       }
     }
-    _ -> Ok(#(stmt.If(condition, if_block, option.None), tokens))
+    _ ->
+      Ok(#(
+        ast.Expression(ast.If(condition, if_block, option.None), None),
+        tokens,
+      ))
   }
 }
