@@ -1,11 +1,8 @@
 import code_gen
-import code_gen/types
-import gleam/io
 import gleam/json
 import gleam/list
 import gleam/result
 import lexer
-import lexer/utils
 import parser
 import simplifile
 import type_checker
@@ -22,14 +19,18 @@ pub fn main() -> Result(Nil, String) {
   case
     compile_and_run(
       "
-print {if 1==2
+print {
+if 1==2
   2+2
 else if 1==2
   3+3
-else
+else {
+  print(1.1/0.02)
   4+4
-1+8}
-print (print 81)
+  }
+1+8
+}
+print 81
         ",
     )
   {

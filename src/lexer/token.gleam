@@ -29,6 +29,7 @@ pub type TokenType {
 
   // Keywords
   Let
+  Mut
   If
   Else
   Print

@@ -1,5 +1,5 @@
 import gleam/list
-import gleam/option.{type Option, None, Some}
+import gleam/option.{None, Some}
 import gleam/result
 import lexer/token
 import parser/ast
@@ -96,8 +96,14 @@ pub fn type_expression(
       )
       Ok(ast.Expression(ast.Block(expressions), last.value_type))
     }
-    ast.Print(_), _ -> {
-      Ok(expression)
+    ast.Print(expr), _ -> {
+      // Ok(expression)
+      use expr <- result.try(type_expression(expr))
+      case expr.value_type {
+        Some(types.Nil) ->
+          Error("Cannot print expression which evaluates to Nil")
+        _ -> Ok(ast.Expression(ast.Print(expr), Some(types.Nil)))
+      }
     }
   }
 }

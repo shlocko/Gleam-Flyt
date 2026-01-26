@@ -1,7 +1,5 @@
 import code_gen/encoder
-import code_gen/types.{
-  type FunctionMetaData, type Instruction, type JEFValue, type Program,
-} as gen_types
+import code_gen/types.{type Instruction, type JEFValue} as gen_types
 import code_gen/utils
 import gleam/int
 import gleam/json
@@ -12,7 +10,6 @@ import lexer/token
 import parser/ast.{type Expression}
 
 pub fn compile_program(program: List(Expression)) -> Result(json.Json, String) {
-  echo program
   use #(instructions, consts, _labels) <- result.try(generate_expressions(
     program,
     [],
@@ -36,7 +33,6 @@ fn generate_expressions(
   case expressions {
     [] -> Ok(#(instructions, consts, labels))
     [expression, ..rest] -> {
-      echo rest
       use #(instructions, consts, labels) <- result.try(generate_expression(
         expression,
         instructions,
@@ -133,9 +129,6 @@ pub fn generate_expression(
     }
     ast.Int(num) -> {
       let #(idx, consts) = utils.find_or_push(gen_types.Int(num), consts)
-      echo num
-      echo idx
-      echo consts
       Ok(#(
         [
           gen_types.Instruction("PushConst", [gen_types.Int(idx)]),

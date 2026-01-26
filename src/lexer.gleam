@@ -14,6 +14,8 @@ pub fn lex(
     // Keywords
     "let" <> rest ->
       lex(add_token(rest, data.2, token.Let, "let", token.None, data.1))
+    "mut" <> rest ->
+      lex(add_token(rest, data.2, token.Mut, "mut", token.None, data.1))
     "print" <> rest ->
       lex(add_token(rest, data.2, token.Print, "print", token.None, data.1))
     "if" <> rest ->

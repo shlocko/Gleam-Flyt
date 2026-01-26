@@ -1,6 +1,5 @@
 import gleam/list
 import gleam/option.{type Option, None, Some}
-import gleam/result
 import lexer/token.{type Token}
 
 pub fn peek_token(tokens: List(Token)) -> Option(Token) {
