@@ -20,4 +20,5 @@ pub type ExprKind {
   )
   Block(statements: List(Expression))
   Print(Expression)
+  Let(identifier: token.Token, initializer: Expression, mut: Bool)
 }

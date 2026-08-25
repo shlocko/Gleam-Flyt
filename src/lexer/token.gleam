@@ -16,6 +16,7 @@ pub type TokenType {
   Equals
   LeftBrace
   RightBrace
+  Colon
 
   // Two Character
   EqualsEquals

@@ -58,23 +58,16 @@ pub fn lex(
           case mask {
             #(True, _) -> {
               let #(num_str, rest) = consume_while(data.0, utils.is_digit)
-              use num <- result.try(
-                int.parse(num_str)
-                |> result.map_error(fn(_) {
-                  "Failed to parse numeric literal: " <> num_str
-                }),
-              )
+              // use num <- result.try(
+              //   int.parse(num_str)
+              //   |> result.map_error(fn(_) {
+              //     "Failed to parse numeric literal: " <> num_str
+              //   }),
+              // )
               case rest {
                 "." <> rest -> {
-                  let #(num_str, rest) = consume_while(rest, utils.is_digit)
-                  use num_after_dot <- result.try(
-                    int.parse(num_str)
-                    |> result.map_error(fn(_) {
-                      "Failed to parse numeric literal after dot: " <> num_str
-                    }),
-                  )
-                  let float_str =
-                    int.to_string(num) <> "." <> int.to_string(num_after_dot)
+                  let #(num_str2, rest) = consume_while(rest, utils.is_digit)
+                  let float_str = num_str <> "." <> num_str2
                   use parsed_float <- result.try(
                     float.parse(float_str)
                     |> result.map_error(fn(_) {
@@ -91,6 +84,12 @@ pub fn lex(
                   ))
                 }
                 rest -> {
+                  use num <- result.try(
+                    int.parse(num_str)
+                    |> result.map_error(fn(_) {
+                      "Failed to parse numeric literal: " <> num_str
+                    }),
+                  )
                   case rest {
                     "f" <> rest -> {
                       lex(add_token(

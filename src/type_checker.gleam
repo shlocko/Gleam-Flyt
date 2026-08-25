@@ -105,6 +105,15 @@ pub fn type_expression(
         _ -> Ok(ast.Expression(ast.Print(expr), Some(types.Nil)))
       }
     }
+    ast.Let(identifier, initializer, mut), _ -> {
+      use initializer <- result.try(type_expression(initializer))
+      let expression =
+        ast.Expression(
+          kind: ast.Let(identifier, initializer, mut),
+          value_type: initializer.value_type,
+        )
+      Ok(expression)
+    }
   }
 }
 

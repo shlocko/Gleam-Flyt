@@ -6,14 +6,19 @@ import gleam/json
 import gleam/list
 import gleam/option.{None, Some}
 import gleam/result
+import gleam/string
 import lexer/token
 import parser/ast.{type Expression}
 
 pub fn compile_program(program: List(Expression)) -> Result(json.Json, String) {
   use #(instructions, consts, _labels) <- result.try(generate_expressions(
+    // List of expressions
     program,
+    // List of currently generated instructions
     [],
+    // List of currently generated constants
     [],
+    // Count of labels
     0,
   ))
   // let instructions =
@@ -219,6 +224,10 @@ pub fn generate_expression(
       Ok(#(instructions, consts, labels))
     }
     ast.Identifier(_name) -> todo
-    // _ -> todo
+    ast.Let(identifier, initializer, mut) -> todo
+    _ ->
+      todo as {
+        "codegen not implemented for " <> string.inspect(expression.kind)
+      }
   }
 }

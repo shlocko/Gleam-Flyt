@@ -20,17 +20,17 @@ pub fn main() -> Result(Nil, String) {
     compile_and_run(
       "
 print {
-if 1==2
+if 1==1
   2+2
 else if 1==2
   3+3
 else {
-  print(1.1/0.02)
+  print(1.1/0.000000002)
   4+4
   }
 1+8
 }
-print 81
+print 81.2
         ",
     )
   {
