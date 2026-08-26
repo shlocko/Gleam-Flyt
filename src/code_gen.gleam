@@ -224,7 +224,9 @@ pub fn generate_expression(
       Ok(#(instructions, consts, labels))
     }
     ast.Identifier(_name) -> todo
-    ast.Let(identifier, initializer, mut) -> todo
+    ast.Let(identifier, initializer, mut) -> {
+      todo
+    }
     _ ->
       todo as {
         "codegen not implemented for " <> string.inspect(expression.kind)
