@@ -30,6 +30,7 @@ else {
   }
 1+8
 }
+let test 
 print 81.2
         ",
     )
