@@ -1,8 +1,9 @@
 import gleam/option.{type Option}
 import lexer/token.{type TokenType}
+import type_checker/types
 
 pub type ResolvedExpression {
-  ResolvedExpression(id: Int, kind: ResolvedExprKind)
+  ResolvedExpression(kind: ResolvedExprKind, value_type: Option(types.FlytType))
 }
 
 pub type ResolvedExprKind {

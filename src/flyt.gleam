@@ -30,7 +30,7 @@ else {
   }
 1+8
 }
-let test 
+static test = 1
 print 81.2
         ",
     )
@@ -52,12 +52,17 @@ fn compile_and_run(source: String) -> Result(Nil, String) {
   // echo tokens
   use stmts <- result.try(parser.parse(tokens))
   // echo stmts
-  use checked <- result.try(type_checker.type_check_program(stmts))
-  echo checked
-  use program <- result.try(code_gen.compile_program(checked))
-  echo program |> json.to_string
-  let _ = simplifile.write("program.jef", program |> json.to_string)
+  //
+  // CURRENTLY COMMENTED WHILE AST GETS REWORK
+  // 
+  // use checked <- result.try(type_checker.type_check_program(stmts))
+  // echo checked
+  // use program <- result.try(code_gen.compile_program(checked))
+  // echo program |> json.to_string
+  // let _ = simplifile.write("program.jef", program |> json.to_string)
+  //
+  // END OF REWORK COMMENT
 
-  let _ = echo program
+  // let _ = echo program
   Ok(Nil)
 }

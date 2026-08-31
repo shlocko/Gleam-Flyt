@@ -3,7 +3,7 @@ import lexer/token.{type TokenType}
 import type_checker/types
 
 pub type Expression {
-  Expression(kind: ExprKind, value_type: Option(types.FlytType))
+  Expression(kind: ExprKind)
 }
 
 pub type ExprKind {
@@ -21,4 +21,5 @@ pub type ExprKind {
   Block(statements: List(Expression))
   Print(Expression)
   Let(identifier: token.Token, initializer: Expression, mut: Bool)
+  Static(identifier: token.Token, initializer: Expression, mut: Bool)
 }

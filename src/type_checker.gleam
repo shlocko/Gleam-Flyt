@@ -2,26 +2,27 @@ import gleam/list
 import gleam/option.{None, Some}
 import gleam/result
 import lexer/token
-import parser/ast
+import resolver/ast
 import type_checker/types
 
 pub fn type_expression(
-  expression: ast.Expression,
-) -> Result(ast.Expression, String) {
+  expression: ast.ResolvedExpression,
+) -> Result(ast.ResolvedExpression, String) {
   case expression.kind, expression.value_type {
     _, Some(_) -> Ok(expression)
     ast.Int(_), _ -> {
-      Ok(ast.Expression(..expression, value_type: Some(types.Int)))
+      Ok(ast.ResolvedExpression(..expression, value_type: Some(types.Int)))
     }
     ast.Float(_), _ -> {
-      Ok(ast.Expression(..expression, value_type: Some(types.Float)))
+      Ok(ast.ResolvedExpression(..expression, value_type: Some(types.Float)))
     }
     ast.Group(inner), _ -> {
       case inner.value_type {
-        Some(kind) -> Ok(ast.Expression(..expression, value_type: Some(kind)))
+        Some(kind) ->
+          Ok(ast.ResolvedExpression(..expression, value_type: Some(kind)))
         None -> {
           use inner_typed <- result.try(type_expression(inner))
-          Ok(ast.Expression(
+          Ok(ast.ResolvedExpression(
             kind: ast.Group(inner_typed),
             value_type: inner_typed.value_type,
           ))
@@ -34,7 +35,7 @@ pub fn type_expression(
       case left_typed.value_type == right_typed.value_type {
         True ->
           Ok(
-            ast.Expression(
+            ast.ResolvedExpression(
               kind: ast.BinaryOperator(
                 op: op,
                 left: left_typed,
@@ -60,7 +61,7 @@ pub fn type_expression(
               case else_block {
                 Some(blk) -> {
                   use else_block <- result.try(type_expression(blk))
-                  Ok(ast.Expression(
+                  Ok(ast.ResolvedExpression(
                     ast.If(
                       condition: expression,
                       if_block: if_block,
@@ -70,7 +71,7 @@ pub fn type_expression(
                   ))
                 }
                 None -> {
-                  Ok(ast.Expression(
+                  Ok(ast.ResolvedExpression(
                     ast.If(
                       condition: expression,
                       if_block: if_block,
@@ -94,7 +95,7 @@ pub fn type_expression(
         |> list.last
         |> result.map_error(fn(_) { "Unexpected empty list" }),
       )
-      Ok(ast.Expression(ast.Block(expressions), last.value_type))
+      Ok(ast.ResolvedExpression(ast.Block(expressions), last.value_type))
     }
     ast.Print(expr), _ -> {
       // Ok(expression)
@@ -102,13 +103,13 @@ pub fn type_expression(
       case expr.value_type {
         Some(types.Nil) ->
           Error("Cannot print expression which evaluates to Nil")
-        _ -> Ok(ast.Expression(ast.Print(expr), Some(types.Nil)))
+        _ -> Ok(ast.ResolvedExpression(ast.Print(expr), Some(types.Nil)))
       }
     }
     ast.Let(identifier, initializer, mut), _ -> {
       use initializer <- result.try(type_expression(initializer))
       let expression =
-        ast.Expression(
+        ast.ResolvedExpression(
           kind: ast.Let(identifier, initializer, mut),
           value_type: initializer.value_type,
         )
@@ -118,16 +119,19 @@ pub fn type_expression(
 }
 
 pub fn type_check_program(
-  expressions: List(ast.Expression),
-) -> Result(List(ast.Expression), String) {
+  expressions: List(ast.ResolvedExpression),
+) -> Result(List(ast.ResolvedExpression), String) {
   use #(_, checked) <- result.try(type_check_program_helper(expressions, []))
   Ok(checked |> list.reverse)
 }
 
 fn type_check_program_helper(
-  expressions: List(ast.Expression),
-  checked: List(ast.Expression),
-) -> Result(#(List(ast.Expression), List(ast.Expression)), String) {
+  expressions: List(ast.ResolvedExpression),
+  checked: List(ast.ResolvedExpression),
+) -> Result(
+  #(List(ast.ResolvedExpression), List(ast.ResolvedExpression)),
+  String,
+) {
   case expressions {
     [] -> Ok(#([], checked))
     [expression, ..rest] -> {

@@ -12,6 +12,8 @@ pub fn lex(
 ) -> Result(#(String, Int, List(Token)), String) {
   case data.0 {
     // Keywords
+    "static" <> rest ->
+      lex(add_token(rest, data.2, token.Static, "static", token.None, data.1))
     "let" <> rest ->
       lex(add_token(rest, data.2, token.Let, "let", token.None, data.1))
     "mut" <> rest ->

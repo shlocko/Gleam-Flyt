@@ -30,6 +30,7 @@ pub type TokenType {
 
   // Keywords
   Let
+  Static
   Mut
   If
   Else
