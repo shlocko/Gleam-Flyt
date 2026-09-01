@@ -2,10 +2,15 @@
 struct Pos{
     x: Int,
     y: Int,
-	foo: fn() {
-		print("This is a method")
+}
+
+impl Pos {
+	fn move(mut self, dx: Int, dy: Int) {
+		self.x += dx
+		self.y += dy
 	}
 }
+
 
 fn main(){
     print("Hello World")

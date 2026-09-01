@@ -6,7 +6,7 @@ pub type ModuleId =
   Int
 
 pub type ModuleInfo {
-  ModuleInfo(id: ModuleId, parent: ModuleId)
+  ModuleInfo(id: ModuleId, parent: Option(ModuleId), name: String)
 }
 
 pub type ModulePath =
@@ -16,7 +16,8 @@ pub type Module {
   Module(
     id: ModuleId,
     parent: Option(ModuleId),
+    name: String,
     ast: List(ast.Expression),
-    resolved_ast: List(resolved_ast.ResolvedExpression),
+    resolved_ast: Option(List(resolved_ast.ResolvedExpression)),
   )
 }

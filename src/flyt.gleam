@@ -1,13 +1,18 @@
 import code_gen
+import compiler
 import gleam/json
 import gleam/list
 import gleam/result
+import gleam/string
 import lexer
 import parser
 import simplifile
 import type_checker
 
 pub fn main() -> Result(Nil, String) {
+  use outcome <- result.try(compiler.compile_program("main"))
+  echo outcome
+  todo
   // echo "_ => "
   // echo utils.check_utf("_")
   // use #(_, _, tokens) <- result.try(
@@ -16,33 +21,33 @@ pub fn main() -> Result(Nil, String) {
   // let tokens = tokens |> list.reverse
   // echo tokens
   // echo parser.parse_program(tokens)
-  case
-    compile_and_run(
-      "
-print {
-if 1==1
-  2+2
-else if 1==2
-  3+3
-else {
-  print(1.1/0.000000002)
-  4+4
-  }
-1+8
-}
-static test = 1
-print 81.2
-        ",
-    )
-  {
-    Ok(_) -> {
-      Ok(Nil)
-    }
-    Error(str) -> {
-      // io.println(str)
-      panic as str
-    }
-  }
+  //   case
+  //     compile_and_run(
+  //       "
+  // print {
+  // if 1==1
+  //   2+2
+  // else if 1==2
+  //   3+3
+  // else {
+  //   print(1.1/0.000000002)
+  //   4+4
+  //   }
+  // 1+8
+  // }
+  // static test = 1
+  // print 81.2
+  //         ",
+  //     )
+  //   {
+  //     Ok(_) -> {
+  //       Ok(Nil)
+  //     }
+  //     Error(str) -> {
+  //       // io.println(str)
+  //       panic as str
+  //     }
+  //   }
 }
 
 fn compile_and_run(source: String) -> Result(Nil, String) {
