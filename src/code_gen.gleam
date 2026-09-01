@@ -10,7 +10,9 @@ import gleam/string
 import lexer/token
 import parser/ast.{type Expression}
 
-pub fn compile_program(program: List(Expression)) -> Result(json.Json, String) {
+pub fn generate_program(
+  program: List(Expression),
+) -> Result(json.Json, String) {
   use #(instructions, consts, _labels) <- result.try(generate_expressions(
     // List of expressions
     program,

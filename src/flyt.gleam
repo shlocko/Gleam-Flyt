@@ -57,7 +57,7 @@ fn compile_and_run(source: String) -> Result(Nil, String) {
   // 
   // use checked <- result.try(type_checker.type_check_program(stmts))
   // echo checked
-  // use program <- result.try(code_gen.compile_program(checked))
+  // use program <- result.try(code_gen.generate_program(checked))
   // echo program |> json.to_string
   // let _ = simplifile.write("program.jef", program |> json.to_string)
   //
