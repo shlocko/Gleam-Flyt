@@ -37,6 +37,7 @@ pub fn compile_program(entry_module: String) -> Result(json.Json, String) {
             id: 0,
             parent: None,
             name: entry_module,
+            bound_names: [],
             ast: entry_module_ast,
             resolved_ast: None,
           ),

@@ -35,6 +35,7 @@ pub type TokenType {
   If
   Else
   Print
+  Import
 }
 
 pub type Token {

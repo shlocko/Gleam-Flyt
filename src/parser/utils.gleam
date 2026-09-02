@@ -4,15 +4,6 @@ import lexer/token.{type Token}
 import parser/ast
 import type_checker/types
 
-pub type Global {
-  Global(
-    name: token.Token,
-    value_type: Option(types.FlytType),
-    initializer: Option(ast.Expression),
-    mutable: Bool,
-  )
-}
-
 pub type Local {
   Local(
     name: token.Token,
@@ -27,11 +18,7 @@ pub type Function {
 }
 
 pub type ParserState {
-  ParserState(
-    tokens: List(Token),
-    globals: List(Global),
-    functions: List(Function),
-  )
+  ParserState(tokens: List(Token), functions: List(Function))
 }
 
 pub type ExpressionResult =

@@ -4,13 +4,13 @@ import gleam/result
 import lexer/token.{type Token}
 import parser/ast
 import parser/utils.{
-  type ExpressionResult, type Function, type Global, type Local,
-  type ParserState, ParserState,
+  type ExpressionResult, type Function, type Local, type ParserState,
+  ParserState,
 }
 import type_checker/types
 
 pub fn parse(tokens: List(Token)) -> Result(List(ast.Expression), String) {
-  parse_program(ParserState(tokens, [], []))
+  parse_program(ParserState(tokens, []))
 }
 
 fn parse_expression(state: ParserState) -> ExpressionResult {
