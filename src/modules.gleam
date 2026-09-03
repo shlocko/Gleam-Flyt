@@ -27,3 +27,7 @@ pub type Module {
     resolved_ast: Option(List(resolved_ast.ResolvedExpression)),
   )
 }
+
+pub fn has_binding(module: Module, name: token.Token) -> Bool {
+  todo
+}

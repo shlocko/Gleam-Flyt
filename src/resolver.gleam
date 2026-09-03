@@ -11,11 +11,7 @@ pub fn resolve_expression(
   module_id: modules.ModuleId,
   compiler_state: CompilerState,
 ) -> Result(resolved_ast.ResolvedExpression, String) {
-  use module <- result.try(
-    compiler_state.modules
-    |> dict.get(module_id)
-    |> result.map_error(fn(e) { "Dict key not found" }),
-  )
+  use module <- result.try(get_module(compiler_state, module_id))
   case expression.kind {
     ast.Static(identifier, initializer, mut) -> {
       case
@@ -29,4 +25,13 @@ pub fn resolve_expression(
     }
     _ -> todo
   }
+}
+
+fn get_module(
+  compiler_state: CompilerState,
+  module_id: modules.ModuleId,
+) -> Result(modules.Module, String) {
+  compiler_state.modules
+  |> dict.get(module_id)
+  |> result.map_error(fn(_) { "Module not found" })
 }
