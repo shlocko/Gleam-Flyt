@@ -2,6 +2,7 @@ import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
 import lexer/token.{type Token}
+import modules
 import parser/ast
 import parser/utils.{
   type ExpressionResult, type Function, type Local, type ParserState,
@@ -9,7 +10,9 @@ import parser/utils.{
 }
 import type_checker/types
 
-pub fn parse(tokens: List(Token)) -> Result(List(ast.Expression), String) {
+pub fn parse(
+  tokens: List(Token),
+) -> Result(#(List(ast.Expression), List(modules.ModulePath)), String) {
   parse_program(ParserState(tokens, []))
 }
 
@@ -158,9 +161,9 @@ pub fn parse_primary(state: ParserState) -> ExpressionResult {
 
 pub fn parse_program(
   state: ParserState,
-) -> Result(List(ast.Expression), String) {
+) -> Result(#(List(ast.Expression), List(modules.ModulePath)), String) {
   use #(expressions, _tokens) <- result.try(parse_program_helper([], state))
-  Ok(expressions |> list.reverse)
+  Ok(#(expressions |> list.reverse, []))
 }
 
 fn parse_program_helper(

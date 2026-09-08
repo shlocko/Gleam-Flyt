@@ -26,7 +26,9 @@ pub fn compile_program(entry_module: String) -> Result(json.Json, String) {
 
   use #(_, _, entry_module_tokens) <- result.try(lexer.lex(#(source, 0, [])))
   let entry_module_tokens = list.reverse(entry_module_tokens)
-  use entry_module_ast <- result.try(parser.parse(entry_module_tokens))
+  use #(entry_module_ast, entry_worklist) <- result.try(parser.parse(
+    entry_module_tokens,
+  ))
 
   let compiler_state =
     CompilerState(
@@ -43,7 +45,7 @@ pub fn compile_program(entry_module: String) -> Result(json.Json, String) {
           ),
         ),
       ]),
-      worklist: [],
+      worklist: entry_worklist,
     )
   echo compiler_state
   todo
