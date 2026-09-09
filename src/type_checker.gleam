@@ -106,11 +106,11 @@ pub fn type_expression(
         _ -> Ok(ast.ResolvedExpression(ast.Print(expr), Some(types.Nil)))
       }
     }
-    ast.Let(identifier, initializer, mut), _ -> {
+    ast.Static(identifier, initializer, mut), _ -> {
       use initializer <- result.try(type_expression(initializer))
       let expression =
         ast.ResolvedExpression(
-          kind: ast.Let(identifier, initializer, mut),
+          kind: ast.Static(identifier, initializer, mut),
           value_type: initializer.value_type,
         )
       Ok(expression)

@@ -22,7 +22,7 @@ pub type Module {
     id: ModuleId,
     parent: Option(ModuleId),
     name: String,
-    bound_names: List(Binding),
+    exports: List(Binding),
     ast: List(ast.Expression),
     resolved_ast: Option(List(resolved_ast.ResolvedExpression)),
   )

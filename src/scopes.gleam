@@ -3,7 +3,7 @@ import modules
 import resolver/ast as resolved_ast
 
 pub type ScopeStack {
-  ScopeStack(global: Scope, locals: List(Scope))
+  ScopeStack(global: Scope, frames: List(Scope))
 }
 
 pub type Scope {
