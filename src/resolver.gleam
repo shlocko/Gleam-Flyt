@@ -8,7 +8,11 @@ import resolver/ast as resolved_ast
 import scopes
 
 pub type ResolverContext {
-  ResolverContext(scopes: scopes.ScopeStack, compiler_state: CompilerState)
+  ResolverContext(
+    scopes: scopes.ScopeStack,
+    compiler_state: CompilerState,
+    next_binding_id: Int,
+  )
 }
 
 pub fn resolve_module(
@@ -22,6 +26,7 @@ pub fn resolve_module(
         frames: [],
       ),
       compiler_state: compiler_state,
+      next_binding_id: 0,
     )
   use #(resolved_expressions, context) <- result.try(
     expressions
@@ -42,7 +47,28 @@ pub fn resolve_expression(
   context: ResolverContext,
 ) -> Result(#(resolved_ast.ResolvedExpression, ResolverContext), String) {
   // Now you can resolve a given expression, creating a new resolved expression to replace whatever expression you got in, and updating the context to handled scopes as you go
-  todo
+  case expression.kind {
+    ast.Static(identifier, initializer, mut) -> {
+      let #(new_binding_id, context) = get_binding_id(context)
+      use scopes <- result.try(scopes.add_global(
+        context.scopes,
+        modules.Binding(new_binding_id, identifier, mut),
+      ))
+      let context = ResolverContext(..context, scopes: scopes)
+      use #(initializer, context) <- result.try(resolve_expression(
+        initializer,
+        context,
+      ))
+      let resolved_expression =
+        resolved_ast.ResolvedExpression(resolved_ast.Static(
+          new_binding_id,
+          initializer,
+          mut,
+        ))
+      Ok(#(resolved_expression, context))
+    }
+    _ -> todo as "Not yet implemented"
+  }
 }
 
 fn get_module(
@@ -52,4 +78,13 @@ fn get_module(
   compiler_state.modules
   |> dict.get(module_id)
   |> result.map_error(fn(_) { "Module not found" })
+}
+
+fn get_binding_id(
+  context: ResolverContext,
+) -> #(resolved_ast.BindingId, ResolverContext) {
+  #(
+    context.next_binding_id,
+    ResolverContext(..context, next_binding_id: context.next_binding_id + 1),
+  )
 }
