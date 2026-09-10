@@ -1,6 +1,7 @@
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
+import gleam/string
 import lexer/token.{type Token}
 import modules
 import parser/ast
@@ -151,11 +152,15 @@ pub fn parse_primary(state: ParserState) -> ExpressionResult {
         }
         _, _ -> {
           echo tok
-          todo
+          todo as {
+            "Parsing for this token not implemented: " <> string.inspect(tok)
+          }
         }
       }
     }
-    _ -> todo
+    [] -> {
+      Error("Unexpected EOF")
+    }
   }
 }
 

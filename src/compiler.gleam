@@ -1,25 +1,19 @@
-import gleam/dict.{type Dict}
+import compiler/types.{CompilerState}
+import gleam/dict
 import gleam/json
 import gleam/list
 import gleam/option.{None}
 import gleam/result
-import gleam/string
 import lexer
 import modules.{Module}
 import parser
+import resolver
 import simplifile
-
-pub type CompilerState {
-  CompilerState(
-    modules: Dict(modules.ModuleId, modules.Module),
-    worklist: List(modules.ModulePath),
-  )
-}
 
 pub fn compile_program(entry_module: String) -> Result(json.Json, String) {
   use source <- result.try(
     simplifile.read(entry_module <> ".flyt")
-    |> result.map_error(fn(err) {
+    |> result.map_error(fn(_err) {
       "Could not read the entry file: " <> entry_module <> ".flyt"
     }),
   )
@@ -48,5 +42,9 @@ pub fn compile_program(entry_module: String) -> Result(json.Json, String) {
       worklist: entry_worklist,
     )
   echo compiler_state
-  todo
+  use #(entry_module_resolved, compiler_state) <- result.try(
+    resolver.resolve_module(entry_module_ast, compiler_state),
+  )
+  echo entry_module_resolved
+  todo as "End of compile function."
 }

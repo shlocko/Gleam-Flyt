@@ -1,7 +1,10 @@
-import compiler.{type CompilerState}
+import compiler/types.{type CompilerState}
 import gleam/dict
+import gleam/int
 import gleam/list
+import gleam/option.{None}
 import gleam/result
+import gleam/string
 import modules
 import parser/ast
 import resolver/ast as resolved_ast
@@ -49,25 +52,59 @@ pub fn resolve_expression(
   // Now you can resolve a given expression, creating a new resolved expression to replace whatever expression you got in, and updating the context to handled scopes as you go
   case expression.kind {
     ast.Static(identifier, initializer, mut) -> {
-      let #(new_binding_id, context) = get_binding_id(context)
-      use scopes <- result.try(scopes.add_global(
-        context.scopes,
-        modules.Binding(new_binding_id, identifier, mut),
-      ))
-      let context = ResolverContext(..context, scopes: scopes)
-      use #(initializer, context) <- result.try(resolve_expression(
-        initializer,
+      case scopes.has_name(context.scopes.global, identifier) {
+        True -> Error("Name has already been bound at top level of module.")
+        False -> {
+          let #(new_binding_id, context) = get_binding_id(context)
+          let scopes =
+            scopes.add_global(
+              context.scopes,
+              modules.Binding(new_binding_id, identifier, mut),
+            )
+          let context = ResolverContext(..context, scopes: scopes)
+          use #(initializer, context) <- result.try(resolve_expression(
+            initializer,
+            context,
+          ))
+          let resolved_expression =
+            resolved_ast.ResolvedExpression(
+              resolved_ast.Static(new_binding_id, initializer, mut),
+              option.None,
+            )
+          Ok(#(resolved_expression, context))
+        }
+      }
+    }
+    ast.Int(num) -> {
+      Ok(#(
+        resolved_ast.ResolvedExpression(resolved_ast.Int(num), None),
         context,
       ))
-      let resolved_expression =
-        resolved_ast.ResolvedExpression(resolved_ast.Static(
-          new_binding_id,
-          initializer,
-          mut,
-        ))
-      Ok(#(resolved_expression, context))
     }
-    _ -> todo as "Not yet implemented"
+    ast.Print(expr) -> {
+      use #(resolved_expr, context) <- result.try(resolve_expression(
+        expr,
+        context,
+      ))
+      Ok(#(
+        resolved_ast.ResolvedExpression(resolved_ast.Print(resolved_expr), None),
+        context,
+      ))
+    }
+    ast.Group(expr) -> {
+      use #(resolved_expr, context) <- result.try(resolve_expression(
+        expr,
+        context,
+      ))
+      Ok(#(
+        resolved_ast.ResolvedExpression(resolved_ast.Group(resolved_expr), None),
+        context,
+      ))
+    }
+    _ ->
+      todo as {
+        "Not yet implemented in resolver: " <> string.inspect(expression)
+      }
   }
 }
 

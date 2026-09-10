@@ -6,7 +6,7 @@ pub type BindingId =
   Int
 
 pub type ResolvedExpression {
-  ResolvedExpression(kind: ResolvedExprKind)
+  ResolvedExpression(kind: ResolvedExprKind, value_type: Option(types.FlytType))
 }
 
 pub type ResolvedExprKind {

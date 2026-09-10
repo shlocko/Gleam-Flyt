@@ -1,13 +1,2 @@
-print {
-if 1==1
-  2+2
-else if 1==2
-  3+3
-else {
-  print(1.1/0.000000002)
-  4+4
-  }
-1+8
-}
 static test = 1
-print 81.2
+print(test)

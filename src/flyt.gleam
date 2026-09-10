@@ -10,7 +10,7 @@ import simplifile
 import type_checker
 
 pub fn main() -> Result(Nil, String) {
-  use outcome <- result.try(compiler.compile_program("main"))
+  let outcome = compiler.compile_program("main")
   echo outcome
   todo
   // echo "_ => "
