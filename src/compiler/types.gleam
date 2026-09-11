@@ -5,5 +5,6 @@ pub type CompilerState {
   CompilerState(
     modules: Dict(modules.ModuleId, modules.Module),
     worklist: List(modules.ModulePath),
+    next_ast_id: Int,
   )
 }

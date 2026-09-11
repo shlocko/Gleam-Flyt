@@ -1,4 +1,4 @@
-import compiler/types.{CompilerState}
+import compiler/types.{type CompilerState, CompilerState}
 import gleam/dict
 import gleam/json
 import gleam/list
@@ -40,6 +40,7 @@ pub fn compile_program(entry_module: String) -> Result(json.Json, String) {
         ),
       ]),
       worklist: entry_worklist,
+      next_ast_id: 0,
     )
   echo compiler_state
   use #(entry_module_resolved, compiler_state) <- result.try(
@@ -47,4 +48,11 @@ pub fn compile_program(entry_module: String) -> Result(json.Json, String) {
   )
   echo entry_module_resolved
   todo as "End of compile function."
+}
+
+pub fn get_ast_id(state: CompilerState) -> #(Int, CompilerState) {
+  #(
+    state.next_ast_id,
+    CompilerState(..state, next_ast_id: state.next_ast_id + 1),
+  )
 }
