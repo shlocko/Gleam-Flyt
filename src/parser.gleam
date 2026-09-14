@@ -245,18 +245,6 @@ fn parse_let(state: ParserState) -> ExpressionResult {
         Some(#(_, state)) -> #(True, state)
         None -> #(False, state)
       }
-      // let type_annotation_result = case utils.check_token(state, token.Colon) {
-      //   Some(#(_, state)) -> {
-      //     use #(annotation, state) <- result.try(parse_type_annotation(state))
-      //     Ok(#(Some(annotation), state))
-      //   }
-      //   None -> Ok(#(None, state))
-      // }
-      // use #(type_annotation, state) <- result.try(type_annotation_result)
-      // case type_annotation {
-      //   Some(annotation) -> todo
-      //   None -> todo
-      // }
       use #(identifier, state) <- result.try(utils.expect_token(
         state,
         token.Identifier,

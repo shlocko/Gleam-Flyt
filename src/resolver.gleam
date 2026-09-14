@@ -1,6 +1,5 @@
 import compiler/types.{type CompilerState}
 import gleam/dict
-import gleam/int
 import gleam/list
 import gleam/option.{None}
 import gleam/result
@@ -66,11 +65,15 @@ pub fn resolve_expression(
             initializer,
             context,
           ))
+          let #(node_id, compiler_state) =
+            compiler.get_ast_id(context.compiler_state)
+          let context = ResolverContext(..context, compiler_state:)
           let resolved_expression =
-            resolved_ast.ResolvedExpression(
-              resolved_ast.Static(new_binding_id, initializer, mut),
-              option.None,
-            )
+            resolved_ast.ResolvedExpression(resolved_ast.Static(
+              new_binding_id,
+              initializer,
+              mut,
+            ))
           Ok(#(resolved_expression, context))
         }
       }
